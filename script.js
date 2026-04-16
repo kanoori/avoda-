@@ -7,7 +7,7 @@
 let seconds = 0;
 const display = document.getElementById("timer");
 
-// Start automatically when page loads
+
 setInterval(() => {
   seconds++;
   display.textContent = seconds;
@@ -24,7 +24,7 @@ function toggleDoor(side) {
 let cameraOpen = false;
 
 
-/* Camera Toggle */
+
 function toggleCamera() {
     cameraOpen = !cameraOpen;
 
@@ -41,7 +41,7 @@ function switchCam(img) {
     document.getElementById("static").style.opacity = Math.random();
 }
 
-/* Door + Light placeholders */
+
 function toggleDoor(side) {
     console.log(side + " door toggled");
 }
