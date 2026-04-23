@@ -1,7 +1,6 @@
 
-<script>
     let doors = {
-    left: false,  // false = open, true = closed
+    left: false,
     right: false
 };
 let seconds = 0;
@@ -17,7 +16,6 @@ function toggleDoor(side) {
 
     console.log(side + " door is now " + (doors[side] ? "CLOSED" : "OPEN"));
 
-    // Optional visual change
     document.getElementById("office").style.filter =
         doors.left || doors.right ? "brightness(70%)" : "brightness(100%)";
 }
@@ -33,11 +31,9 @@ function toggleCamera() {
     document.getElementById("static").style.display = cameraOpen ? "block" : "none";
 }
 
-/* Switch Cameras */
 function switchCam(img) {
     document.getElementById("cameraView").style.backgroundImage = `url(${img})`;
 
-    // Static flicker
     document.getElementById("static").style.opacity = Math.random();
 }
 
@@ -49,4 +45,3 @@ function toggleDoor(side) {
 function toggleLight(side) {
     console.log(side + " light toggled");
 }
-</script>
