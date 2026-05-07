@@ -12,10 +12,30 @@ const display = document.getElementById("timer");
 const totalCams = 11;
 
 const monsters = {
-    kanoori: { cam: 0, speed: 0.01 },
-    linny: { cam: 2, speed: 0.03 },
-    sheleg: { cam: 5, speed: 0.06 },
-    jewel: { cam: 7, speed: 0.08 }
+
+    kanoori: {
+        path: [0, 1, 3, 5, 8, "door"],
+        step: 0,
+        speed: 0.02
+    },
+
+    linny: {
+        path: [2, 4, 6, 8, "door"],
+        step: 0,
+        speed: 0.03
+    },
+
+    sheleg: {
+        path: [5, 7, 9, 10, "door"],
+        step: 0,
+        speed: 0.04
+    },
+
+    jewel: {
+        path: [7, 3, 1, 6, 10, "door"],
+        step: 0,
+        speed: 0.05
+    }
 };
 
 
@@ -48,31 +68,20 @@ setInterval(() => {
 
 
 function moveMonster(name) {
+
     let m = monsters[name];
 
     if (Math.random() < m.speed) {
 
-        if (name === "linny" && currentCam === m.cam) {
-            return;
+        if (m.step < m.path.length - 1) {
+
+            m.step++;
+
+            console.log(
+                name + " moved to",
+                m.path[m.step]
+            );
         }
-
-
-        if (name === "jewel") {
-            if (Math.random() < 0.5) {
-                m.cam += 2;
-            } else {
-                m.cam += 1;
-            }
-        } else {
-            m.cam += 1;
-        }
-
-
-        if (m.cam >= totalCams) {
-            m.cam = "door";
-        }
-
-        console.log(name + " moved to", m.cam);
     }
 }
 
@@ -84,7 +93,7 @@ function checkJumpscare() {
     for (let name in monsters) {
         let m = monsters[name];
 
-        if (m.cam === "door") {
+        if (getMonsterCam(name) === "door"){
 
             let side;
 
@@ -119,7 +128,12 @@ function checkCameraDanger() {
     }
 }
 
+function getMonsterCam(name) {
 
+    let m = monsters[name];
+
+    return m.path[m.step];
+}
 
 function toggleDoor(side) {
 
@@ -171,15 +185,36 @@ function toggleCamera() {
 
 
 function switchCam(camIndex) {
+
     currentCam = camIndex;
 
+    let monstersHere = [];
+
+    for (let name in monsters) {
+
+        if (getMonsterCam(name) === camIndex) {
+            monstersHere.push(name);
+        }
+    }
+
+    let imageName = "cam" + (camIndex + 1);
+
+    if (monstersHere.length > 0) {
+        imageName += "_" + monstersHere.join("_");
+    }
+
+    imageName += ".png";
+
+    console.log(imageName);
+
     document.getElementById("cameraView").style.backgroundImage =
-        "url(cam" + (camIndex + 1) + ".png)";
+        "url('images/" + imageName + "')";
 
-    document.getElementById("static").style.opacity = Math.random();
+    document.getElementById("static").style.opacity =
+        Math.random() * 0.4;
+}   
 
-    checkCameraDanger();
-}
+
 function triggerGameOver(monsterName) {
     gameOver = true;
 
