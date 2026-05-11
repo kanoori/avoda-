@@ -19,6 +19,8 @@
     <div id="cameraView"></div>
     <div id="static"></div>
 
+
+
 <div id="camMap">
     <button class="camBtn" onclick="switchCam(0)">Cam 1</button>
     <button class="camBtn" onclick="switchCam(1)">Cam 2</button>
@@ -34,10 +36,9 @@
 </div>
 
     <div id="ui">
+<button id="zapBtn" onclick="zapMonstersOnCam()" style="display:none;">Zap Monster</button>
         <button onclick="toggleDoor('left')">Left Door</button>
-        <button onclick="toggleLight('left')">Left Light</button>
         <button onclick="toggleCamera()">Cameras</button>
-        <button onclick="toggleLight('right')">Right Light</button>
         <button onclick="toggleDoor('right')">Right Door</button>
     </div>
 
