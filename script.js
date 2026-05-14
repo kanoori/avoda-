@@ -2,9 +2,27 @@ let doors = {
     left: false,
     right: false
 };
+let gameStarted = false;
 let doorTimers = { left: null, right: null };
 let doorCooldowns = { left: false, right: false };
 
+let staticSound1 = new Audio('ambience.mp3');
+staticSound1.loop = true;
+let staticSound2 = new Audio('ambience.mp3');
+staticSound2.loop=true;
+
+
+document.getElementById("startBtn").addEventListener("click", () => {
+
+    if (gameStarted) return;
+    gameStarted = true;
+    document.getElementById("startScreen").style.display = "none";
+
+    staticSound1.play();
+    staticSound2.play();
+
+    startGameLoops();
+});
 const DOOR_OPEN_TIME = 5000;
 const DOOR_COOLDOWN = 3000;
 let gameOver = false;
@@ -42,33 +60,37 @@ const monsters = {
         speed: 0.05
     }
 };
+function startGameLoops() {
+
+    setInterval(() => {
+        seconds++;
+        display.textContent = seconds;
+    }, 1000);
+
+    setInterval(() => {
+        moveMonster("kanoori");
+        moveMonster("linny");
+        moveMonster("sheleg");
+        moveMonster("jewel");
+
+        checkJumpscare();
+    }, 1000);
+
+    setInterval(() => {
+        monsters.kanoori.speed += 0.0009;
+        monsters.linny.speed += 0.001;
+        monsters.sheleg.speed += 0.0015;
+        monsters.jewel.speed += 0.002;
+    }, 30000);
+
+    setInterval(() => {
+        if (cameraOpen) {
+            switchCam(currentCam);
+        }
+    }, 100);
+}
 
 
-
-setInterval(() => {
-    seconds++;
-    display.textContent = seconds;
-}, 1000);
-
-
-setInterval(() => {
-    moveMonster("kanoori");
-    moveMonster("linny");
-    moveMonster("sheleg");
-    moveMonster("jewel");
-
-    checkJumpscare();
-}, 1000);
-
-
-setInterval(() => {
-    monsters.kanoori.speed += 0.0009;
-    monsters.linny.speed += 0.001;
-    monsters.sheleg.speed += 0.0015;
-    monsters.jewel.speed += 0.002;
-
-    console.log("Night getting harder...");
-}, 30000);
 
 
 
@@ -104,27 +126,36 @@ function moveMonster(name) {
     }
 }
 
-
+let jumpscareSound = new Audio('jumpscare.wav');
 
 function checkJumpscare() {
-    if (gameOver === true) return;
-
+    if (gameOver === true){
+        jumpscareSound.play();
+        jumpscareSound.loop = false;
+        return;
+    }
     for (let name in monsters) {
         let m = monsters[name];
 
         if (getMonsterCam(name) === "door") {
 
-            let side = (name === "kanoori" || name === "jewel") ? "left" : "right";
+    let side;
+
+    if (name === "kanoori" || name === "jewel") {
+    side = "left";
+    } else {
+    side = "right";
+    }
 
             if (doors[side] === false) {
                 triggerGameOver(name);
                 return;
             } else {
 
-                console.log(name + " blocked! Returning to start.");
+                console.log(name + " Blocked! Returning back!");
                 
 
-                m.step = 0; 
+                m.step = m.path.length-3; 
                 
 
             }
@@ -257,16 +288,6 @@ function triggerGameOver(monsterName) {
 function restartGame() {
     location.reload();
 }
-setInterval(() => {
-    if (gameOver === true) return;
-
-    moveMonster("kanoori");
-    moveMonster("linny");
-    moveMonster("sheleg");
-    moveMonster("jewel");
-
-    checkJumpscare();
-}, 1000);
 function zapMonstersOnCam() {
     if (gameOver) return;
     if (!cameraOpen) {
@@ -298,8 +319,12 @@ function zapMonstersOnCam() {
 let zapCooldown = false;
 const ZAP_COOLDOWN_TIME = 3000; 
 
+let zapSuccessSound = new Audio('zap.wav');
+let zapFailSound = new Audio('zap1.wav');
+
 function zapMonstersOnCam() {
-    if (gameOver) return; 
+    if (gameOver) return;
+
     if (!cameraOpen) {
         console.log("Open a camera first!");
         return;
@@ -314,22 +339,42 @@ function zapMonstersOnCam() {
 
     for (let name in monsters) {
         let m = monsters[name];
-
+        console.log(
+    name,
+    "monsterCam:",
+    getMonsterCam(name),
+    "currentCam:",
+    currentCam
+);      
         if (getMonsterCam(name) === currentCam) {
+
+            console.log(name + " detected on cam " + currentCam);
+
             if (m.step > 0) {
                 m.step--;
-                console.log(name + " was zapped back to room " + m.path[m.step]);
+
+                console.log(
+                    name + " was zapped back to room " + m.path[m.step]
+                );
+
                 anyZapped = true;
             } else {
-                console.log(name + " is already at the start and can't be zapped further.");
+                console.log(name + " already at spawn");
             }
         }
     }
 
-    if (!anyZapped) console.log("No monsters on this camera to zap.");
+    if (anyZapped) {
+        zapSuccessSound.currentTime = 0;
+        zapSuccessSound.play();
+    } else {
+        zapFailSound.currentTime = 0;
+        zapFailSound.play();
 
-    switchCam(currentCam); 
+        console.log("No monsters on this camera to zap.");
+    }
 
+    switchCam(currentCam);
 
     zapCooldown = true;
     document.getElementById("zapBtn").disabled = true;
@@ -340,5 +385,3 @@ function zapMonstersOnCam() {
         console.log("Zap ready!");
     }, ZAP_COOLDOWN_TIME);
 }
-let zapSound = new Audio('zap.wav');
-zapSound.play();
