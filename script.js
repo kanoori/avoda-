@@ -127,13 +127,19 @@ function moveMonster(name) {
 }
 
 let jumpscareSound = new Audio('jumpscare.wav');
-
+let sybau=0;
 function checkJumpscare() {
+    
+    if(sybau === 0){
     if (gameOver === true){
         jumpscareSound.play();
-        jumpscareSound.loop = false;
+        staticSound1.volume=0;
+        staticSound2.volume=0;
+        sybau++;
+        
         return;
     }
+}
     for (let name in monsters) {
         let m = monsters[name];
 
@@ -179,7 +185,9 @@ function getMonsterCam(name) {
 
     return m.path[m.step];
 }
+let doorSound = new Audio('door.mp3');
 function toggleDoor(side) {
+    doorSound.play();
     if (gameOver) return;
 
     if (doorCooldowns[side]) {
@@ -228,9 +236,11 @@ function updateVisuals() {
         document.getElementById("office").style.filter = "brightness(100%)";
     }
 }
+let cameraSound = new Audio('camera.mp3')
 function toggleCamera() {
     cameraOpen = !cameraOpen;
-
+    cameraSound.play();
+    
     const zapButton = document.getElementById("zapBtn");
 
     if (cameraOpen) {
