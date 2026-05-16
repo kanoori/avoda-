@@ -6,9 +6,13 @@ let gameStarted = false;
 let doorTimers = { left: null, right: null };
 let doorCooldowns = { left: false, right: false };
 
-let staticSound1 = new Audio('ambience.mp3');
+let switchCamSound = new Audio('sounds/switch.wav')
+switchCamSound.loop = false;
+let cam5StaticSound = new Audio('sounds/static5.mp3');
+cam5StaticSound.loop = true;
+let staticSound1 = new Audio('sounds/ambience.mp3');
 staticSound1.loop = true;
-let staticSound2 = new Audio('ambience.mp3');
+let staticSound2 = new Audio('sounds/ambience.mp3');
 staticSound2.loop=true;
 
 
@@ -32,9 +36,9 @@ let seconds = 0;
 
 const display = document.getElementById("timer");
 
-const totalCams = 11;
+const totalCams = 10;
 
-const monsters = {
+const hatulim = {
 
     kanoori: {
         path: [0, 1, 3, 5, 8, "door"],
@@ -43,19 +47,19 @@ const monsters = {
     },
 
     linny: {
-        path: [2, 4, 6, 8, "door"],
+        path: [0,2, 4, 6, 8, "door"],
         step: 0,
         speed: 0.03
     },
 
     sheleg: {
-        path: [5, 7, 9, 10, "door"],
+        path: [0,5, 7, 9, 10, "door"],
         step: 0,
         speed: 0.04
     },
 
     jewel: {
-        path: [7, 3, 1, 6, 10, "door"],
+        path: [0,7, 3, 1, 6, 10, "door"],
         step: 0,
         speed: 0.05
     }
@@ -68,44 +72,41 @@ function startGameLoops() {
     }, 1000);
 
     setInterval(() => {
-        moveMonster("kanoori");
-        moveMonster("linny");
-        moveMonster("sheleg");
-        moveMonster("jewel");
+        movehatulim("kanoori");
+        movehatulim("linny");
+        movehatulim("sheleg");
+        movehatulim("jewel");
 
         checkJumpscare();
     }, 1000);
 
     setInterval(() => {
-        monsters.kanoori.speed += 0.0009;
-        monsters.linny.speed += 0.001;
-        monsters.sheleg.speed += 0.0015;
-        monsters.jewel.speed += 0.002;
+        hatulim.kanoori.speed += 0.0009;
+        hatulim.linny.speed += 0.001;
+        hatulim.sheleg.speed += 0.0015;
+        hatulim.jewel.speed += 0.002;
     }, 30000);
 
-    setInterval(() => {
-        if (cameraOpen) {
-            switchCam(currentCam);
-        }
-    }, 100);
+}
+
+function nextCam() {
+    switchCam(currentCam + 1);
 }
 
 
 
+function movehatulim(name) {
+    let m = hatulim[name];
 
 
-function moveMonster(name) {
-    let m = monsters[name];
-
-
-    let lookingAtMonster = cameraOpen && currentCam === getMonsterCam(name);
+    let lookingAthatulim = cameraOpen && currentCam === gethatulimCam(name);
     let effectiveSpeed = m.speed;
 
-    if (!lookingAtMonster) {
+    if (!lookingAthatulim) {
         effectiveSpeed += 0.01;
     }
 
-    if (getMonsterCam(name) === "door") {
+    if (gethatulimCam(name) === "door") {
     let side;
 
     if (name === "kanoori" || name === "jewel") {
@@ -126,7 +127,7 @@ function moveMonster(name) {
     }
 }
 
-let jumpscareSound = new Audio('jumpscare.wav');
+let jumpscareSound = new Audio('sounds/jumpscare.wav');
 let sybau=0;
 function checkJumpscare() {
     
@@ -140,10 +141,10 @@ function checkJumpscare() {
         return;
     }
 }
-    for (let name in monsters) {
-        let m = monsters[name];
+    for (let name in hatulim) {
+        let m = hatulim[name];
 
-        if (getMonsterCam(name) === "door") {
+        if (gethatulimCam(name) === "door") {
 
     let side;
 
@@ -170,8 +171,8 @@ function checkJumpscare() {
 }
 
 function checkCameraDanger() {
-    for (let name in monsters) {
-        let m = monsters[name];
+    for (let name in hatulim) {
+        let m = hatulim[name];
 
         if (m.cam === currentCam) {
             console.log(name + " is on this camera!");
@@ -179,13 +180,13 @@ function checkCameraDanger() {
     }
 }
 
-function getMonsterCam(name) {
+function gethatulimCam(name) {
 
-    let m = monsters[name];
+    let m = hatulim[name];
 
     return m.path[m.step];
 }
-let doorSound = new Audio('door.mp3');
+let doorSound = new Audio('sounds/door.mp3');
 function toggleDoor(side) {
     doorSound.play();
     if (gameOver) return;
@@ -231,12 +232,12 @@ function autoOpenDoor(side) {
 
 function updateVisuals() {
     if (doors.left === true || doors.right === true) {
-        document.getElementById("office").style.filter = "brightness(70%)";
+        document.getElementById("images/office").style.filter = "brightness(70%)";
     } else {
-        document.getElementById("office").style.filter = "brightness(100%)";
+        document.getElementById("images/office").style.filter = "brightness(100%)";
     }
 }
-let cameraSound = new Audio('camera.mp3')
+let cameraSound = new Audio('sounds/camera.mp3')
 function toggleCamera() {
     cameraOpen = !cameraOpen;
     cameraSound.play();
@@ -257,48 +258,68 @@ function toggleCamera() {
         zapButton.style.display = "none";
     }
 }
-
+const hatulPositions = {
+    kanoori: { x: 100, y: 200 },
+    linny: { x: 250, y: 180 },
+    sheleg: { x: 350, y: 220 },
+    jewel: { x: 180, y: 150 }
+};
 function switchCam(camIndex) {
-
+    switchCamSound.currentTime=0;
+    switchCamSound.play();
     currentCam = camIndex;
 
-    let monstersHere = [];
 
-    for (let name in monsters) {
+               if (camIndex !== 4){
+                cam5StaticSound.pause();
+                cam5StaticSound.currentTime=0;
+            }
 
-        if (getMonsterCam(name) === camIndex) {
-            monstersHere.push(name);
+            if (camIndex === 4){
+                cam5StaticSound.loop=true;
+                cam5StaticSound.play();
+            }
+
+
+    let hatulimHere = [];
+
+    for (let name in hatulim) {
+        if (gethatulimCam(name) === camIndex) {
+            hatulimHere.push(name);
         }
     }
 
-    let imageName = "cam" + (camIndex + 1);
+    let hatulimImages = "";
 
-    if (monstersHere.length > 0) {
-        imageName += "_" + monstersHere.join("_");
-    }
+for (let name of hatulimHere) {
+    let pos = hatulPositions[name];
 
-    imageName += ".png";
-
-    console.log(imageName);
-
-    document.getElementById("cameraView").style.backgroundImage =
-        "url('images/" + imageName + "')";
+    hatulimImages += `
+        <img class="hatul"
+             src="images/hatulim/${name}.png"
+             style="left:${pos.x}px; top:${pos.y}px;">
+    `;
+}
+    document.getElementById("cameraView").innerHTML = `
+        <img class="camBg" src="images/cams/cam${camIndex + 1}.png">
+        ${hatulimImages}
+    `;
 
     document.getElementById("static").style.opacity =
         Math.random() * 0.4;
-}   
-function triggerGameOver(monsterName) {
+}  
+function triggerGameOver(hatulimName) {
     gameOver = true;
 
     document.getElementById("gameOverText").textContent =
-        monsterName + " got you!";
+        hatulimName + " got you!";
 
     document.getElementById("gameOverScreen").style.display = "flex";
 }
 function restartGame() {
     location.reload();
 }
-function zapMonstersOnCam() {
+function zaphatulimOnCam() {
     if (gameOver) return;
     if (!cameraOpen) {
         console.log("Open a camera first!");
@@ -307,11 +328,12 @@ function zapMonstersOnCam() {
 
     let anyZapped = false;
 
-    for (let name in monsters) {
-        let m = monsters[name];
+    for (let name in hatulim) {
+        let m = hatulim[name];
 
 
-        if (getMonsterCam(name) === currentCam) {
+        if (gethatulimCam(name) === currentCam) {
+
             if (m.step > 0) {
                 m.step--; 
                 console.log(name + " was zapped back to room " + m.path[m.step]);
@@ -322,17 +344,17 @@ function zapMonstersOnCam() {
         }
     }
 
-    if (!anyZapped) console.log("No monsters on this camera to zap.");
+    if (!anyZapped) console.log("No hatulim on this camera to zap.");
     
     switchCam(currentCam);
 }
 let zapCooldown = false;
 const ZAP_COOLDOWN_TIME = 3000; 
 
-let zapSuccessSound = new Audio('zap.wav');
-let zapFailSound = new Audio('zap1.wav');
+let zapSuccessSound = new Audio('sounds/zap.wav');
+let zapFailSound = new Audio('sounds/zap1.wav');
 
-function zapMonstersOnCam() {
+function zaphatulimOnCam() {
     if (gameOver) return;
 
     if (!cameraOpen) {
@@ -347,16 +369,16 @@ function zapMonstersOnCam() {
 
     let anyZapped = false;
 
-    for (let name in monsters) {
-        let m = monsters[name];
+    for (let name in hatulim) {
+        let m = hatulim[name];
         console.log(
     name,
-    "monsterCam:",
-    getMonsterCam(name),
+    "hatulimCam:",
+    gethatulimCam(name),
     "currentCam:",
     currentCam
 );      
-        if (getMonsterCam(name) === currentCam) {
+        if (gethatulimCam(name) === currentCam) {
 
             console.log(name + " detected on cam " + currentCam);
 
@@ -381,7 +403,7 @@ function zapMonstersOnCam() {
         zapFailSound.currentTime = 0;
         zapFailSound.play();
 
-        console.log("No monsters on this camera to zap.");
+        console.log("No hatulim on this camera to zap.");
     }
 
     switchCam(currentCam);
