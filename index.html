@@ -50,6 +50,42 @@
     </div>
 
 </div>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDeZsqAzj5xCIx-p2kB3QhYUaKOI-dcyQI",
+  authDomain: "fnam-avoda.firebaseapp.com",
+  projectId: "fnam-avoda",
+  storageBucket: "fnam-avoda.appspot.com",
+  messagingSenderId: "850288141411",
+  appId: "1:850288141411:web:c7b31b70d99ed325038456"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.firebaseDB = db;
+window.firebaseFns = {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  orderBy,
+  limit
+};
+
+console.log("🔥 Firebase fully loaded");
+</script>
 <script src="script.js"></script>
 
 </body>
