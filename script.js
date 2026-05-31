@@ -1,11 +1,20 @@
+
 let doors = {
     left: false,
     right: false
 };
+let timerInterval = null;
+let loopsStarted = false;
+let scoreSaved = false;
 let gameStarted = false;
 let doorTimers = { left: null, right: null };
 let doorCooldowns = { left: false, right: false };
+let doorThreats = {
+    left: 0,
+    right: 0
+};
 
+const DOOR_GRACE_TICKS = 3;
 let switchCamSound = new Audio('sounds/switch.wav')
 switchCamSound.loop = false;
 let cam5StaticSound = new Audio('sounds/static5.mp3');
@@ -25,6 +34,8 @@ document.getElementById("startBtn").addEventListener("click", () => {
     staticSound1.play();
     staticSound2.play();
 
+    loadHighScores();
+
     startGameLoops();
 });
 const DOOR_OPEN_TIME = 5000;
@@ -43,33 +54,35 @@ const hatulim = {
     kanoori: {
         path: [0, 1, 3, 5, 8, "door"],
         step: 0,
-        speed: 0.02
+        speed: 0.01
     },
 
     linny: {
         path: [0,2, 4, 6, 8, "door"],
         step: 0,
-        speed: 0.03
+        speed: 0.02
     },
 
     sheleg: {
-        path: [0,5, 7, 9, 10, "door"],
+        path: [0,5, 7, 8, 9, "door"],
         step: 0,
-        speed: 0.04
+        speed: 0.03
     },
 
     jewel: {
-        path: [0,7, 3, 1, 6, 10, "door"],
+        path: [0,7, 3, 1, 6, 9, "door"],
         step: 0,
-        speed: 0.05
+        speed: 0.04
     }
 };
 function startGameLoops() {
+    if (loopsStarted) return;
+    loopsStarted = true;
 
-    setInterval(() => {
-        seconds++;
-        display.textContent = seconds;
-    }, 1000);
+timerInterval = setInterval(() => {
+    seconds++;
+    display.textContent = seconds;
+}, 1000);
 
     setInterval(() => {
         movehatulim("kanoori");
@@ -78,15 +91,47 @@ function startGameLoops() {
         movehatulim("jewel");
 
         checkJumpscare();
-    }, 1000);
+    }, 5000);
 
     setInterval(() => {
         hatulim.kanoori.speed += 0.0009;
         hatulim.linny.speed += 0.001;
         hatulim.sheleg.speed += 0.0015;
         hatulim.jewel.speed += 0.002;
+        console.log("kashe yoter");
     }, 30000);
 
+}
+function renderCam() {
+    let hatulimHere = [];
+
+    for (let name in hatulim) {
+        const cam = gethatulimCam(name);
+
+        if (cam === currentCam) {
+            hatulimHere.push(name);
+        }
+    }
+
+    let hatulimImages = "";
+
+    for (let name of hatulimHere) {
+        let pos = hatulPositions[name];
+
+        hatulimImages += `
+            <img class="hatul"
+                 src="images/hatulim/${name}.png"
+                 style="left:${pos.x}px; top:${pos.y}px;">
+        `;
+    }
+
+    document.getElementById("cameraView").innerHTML = `
+        <img class="camBg" src="images/cams/cam${currentCam + 1}.png">
+        ${hatulimImages}
+    `;
+
+    document.getElementById("static").style.opacity =
+        Math.random() * 0.4;
 }
 
 function nextCam() {
@@ -122,7 +167,7 @@ function movehatulim(name) {
     if (Math.random() < effectiveSpeed) {
         if (m.step < m.path.length - 1) {
             m.step++;
-            console.log(name + " moved to", m.path[m.step]);
+            console.log(name + " moved to", m.path[m.step]+1);
         }
     }
 }
@@ -130,41 +175,35 @@ function movehatulim(name) {
 let jumpscareSound = new Audio('sounds/jumpscare.wav');
 let sybau=0;
 function checkJumpscare() {
-    
-    if(sybau === 0){
-    if (gameOver === true){
-        jumpscareSound.play();
-        staticSound1.volume=0;
-        staticSound2.volume=0;
-        sybau++;
-        
-        return;
-    }
-}
+    if (gameOver) return;
+
     for (let name in hatulim) {
         let m = hatulim[name];
 
         if (gethatulimCam(name) === "door") {
+        if (name === "kanoori" || name === "jewel") {
+        side = "left";
+        }    else {
+        side = "right";
+        }
 
-    let side;
+          
+            if (doors[side]) {
+                console.log(name + " blocked at door!");
 
-    if (name === "kanoori" || name === "jewel") {
-    side = "left";
-    } else {
-    side = "right";
-    }
+                m.step = m.path.length - 3;
 
-            if (doors[side] === false) {
-                triggerGameOver(name);
-                return;
-            } else {
+                doorThreats[side] = 0;
+            } 
+            else {
+                doorThreats[side]++;
 
-                console.log(name + " Blocked! Returning back!");
-                
+                console.log(name + " at door! threat =", doorThreats[side]);
 
-                m.step = m.path.length-3; 
-                
-
+                if (doorThreats[side] >= DOOR_GRACE_TICKS) {
+                    triggerGameOver(name);
+                    return;
+                }
             }
         }
     }
@@ -231,10 +270,11 @@ function autoOpenDoor(side) {
 }
 
 function updateVisuals() {
+    const office = document.getElementById("office");
     if (doors.left === true || doors.right === true) {
-        document.getElementById("images/office").style.filter = "brightness(70%)";
+        office.style.filter = "brightness(70%)"
     } else {
-        document.getElementById("images/office").style.filter = "brightness(100%)";
+       office.style.filter = "brightness(100%)";
     }
 }
 let cameraSound = new Audio('sounds/camera.mp3')
@@ -265,58 +305,98 @@ const hatulPositions = {
     jewel: { x: 180, y: 150 }
 };
 function switchCam(camIndex) {
-    switchCamSound.currentTime=0;
+    switchCamSound.currentTime = 0;
     switchCamSound.play();
+
     currentCam = camIndex;
 
-
-               if (camIndex !== 4){
-                cam5StaticSound.pause();
-                cam5StaticSound.currentTime=0;
-            }
-
-            if (camIndex === 4){
-                cam5StaticSound.loop=true;
-                cam5StaticSound.play();
-            }
-
-
-    let hatulimHere = [];
-
-    for (let name in hatulim) {
-        if (gethatulimCam(name) === camIndex) {
-            hatulimHere.push(name);
-        }
+    if (camIndex !== 4) {
+        cam5StaticSound.pause();
+        cam5StaticSound.currentTime = 0;
     }
 
-    let hatulimImages = "";
+    if (camIndex === 4) {
+        cam5StaticSound.loop = true;
+        cam5StaticSound.play();
+    }
 
-for (let name of hatulimHere) {
-    let pos = hatulPositions[name];
-
-    hatulimImages += `
-        <img class="hatul"
-             src="images/hatulim/${name}.png"
-             style="left:${pos.x}px; top:${pos.y}px;">
-    `;
-}
-    document.getElementById("cameraView").innerHTML = `
-        <img class="camBg" src="images/cams/cam${camIndex + 1}.png">
-        ${hatulimImages}
-    `;
-
-    document.getElementById("static").style.opacity =
-        Math.random() * 0.4;
-}  
+    renderCam();
+} 
+setInterval(() => {
+    if (cameraOpen) {
+        renderCam();
+    }
+}, 100); 
 function triggerGameOver(hatulimName) {
+
+    if (gameOver) return;
+        clearInterval(timerInterval);
     gameOver = true;
 
     document.getElementById("gameOverText").textContent =
         hatulimName + " got you!";
 
     document.getElementById("gameOverScreen").style.display = "flex";
+
+    saveHighScore(seconds);
+
+    loadHighScores();
+}
+async function saveHighScore(time) {
+    if (scoreSaved) return;
+
+    if (!Number.isFinite(time) || time <= 0) return; 
+
+    scoreSaved = true;
+
+    try {
+        await window.firebaseFns.addDoc(
+            window.firebaseFns.collection(window.firebaseDB, "highscores"),
+            { time: time }
+        );
+
+        console.log("Score saved!");
+        loadHighScores();
+
+    } catch (e) {
+        console.log("Failed to save score", e);
+    }
+}
+async function loadHighScores() {
+    try {
+        const q = window.firebaseFns.query(
+            window.firebaseFns.collection(window.firebaseDB, "highscores"),
+            window.firebaseFns.orderBy("time", "desc"),
+            window.firebaseFns.limit(5)
+        );
+
+        const snapshot = await window.firebaseFns.getDocs(q);
+
+        console.log("Firestore snapshot size:", snapshot.size);
+
+        const list = document.getElementById("highScoreList");
+        list.innerHTML = "";
+
+        snapshot.forEach(doc => {
+            console.log(doc.data());
+            const data = doc.data();
+             if (!Number.isFinite(data.time) || data.time <= 0) return;
+            const li = document.createElement("li");
+            li.textContent = data.time + " sec";
+            list.appendChild(li);
+        });
+
+    } catch (err) {
+        console.error("loadHighScores failed:", err);
+    }
 }
 function restartGame() {
+    scoreSaved = false;
+    gameOver = false;
+    seconds = 0;
+
+    clearInterval(timerInterval); 
+
     location.reload();
 }
 function zaphatulimOnCam() {
@@ -417,3 +497,6 @@ function zaphatulimOnCam() {
         console.log("Zap ready!");
     }, ZAP_COOLDOWN_TIME);
 }
+window.addEventListener("load", () => {
+    loadHighScores();
+});
