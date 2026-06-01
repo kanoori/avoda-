@@ -91,7 +91,7 @@ timerInterval = setInterval(() => {
         movehatulim("jewel");
 
         checkJumpscare();
-    }, 3000);
+    }, 100);
 
     setInterval(() => {
         hatulim.kanoori.speed += 0.0009;
