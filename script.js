@@ -135,9 +135,6 @@ function renderCam() {
         Math.random() * 0.4;
 }
 
-function nextCam() {
-    switchCam(currentCam + 1);
-}
 
 
 
