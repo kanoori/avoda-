@@ -215,7 +215,7 @@ function checkJumpscare() {
     if (doorThreats.left >= DOOR_GRACE_TICKS ||
         doorThreats.right >= DOOR_GRACE_TICKS) {
 
-        triggerGameOver("The hatulim");
+        triggerGameOver();
     }
 }
 
